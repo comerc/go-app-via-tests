@@ -6,10 +6,17 @@ import (
 )
 
 func TestFileSystemPlayerStore(t *testing.T) {
-	file, removeFile := createTempFile(t, `[{"Name":"Chris","Wins": 33},{"Name":"Cleo","Wins":10}]`)
+	t.Run("works with an empty file", func(t *testing.T) {
+		file, removeFile := createTempFile(t, "")
+		defer removeFile()
+		_, err := NewFileSystemPlayerStore(file)
+		assertNoError(t, err)
+	})
+	file, removeFile := createTempFile(t, `[{"Name":"Cleo","Wins":10},{"Name":"Chris","Wins": 33}]`)
 	defer removeFile()
-	store := NewFileSystemPlayerStore(file)
-	t.Run("league run from a reader", func(t *testing.T) {
+	store, err := NewFileSystemPlayerStore(file)
+	assertNoError(t, err)
+	t.Run("league sorted", func(t *testing.T) {
 		got := store.GetLeague()
 		want := League{
 			{Name: "Chris", Wins: 33}, {Name: "Cleo", Wins: 10},
@@ -52,11 +59,4 @@ func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 		os.Remove(tmpfile.Name())
 	}
 	return tmpfile, removeFile
-}
-
-func assertScoreEquals(t testing.TB, got, want int) {
-	t.Helper()
-	if got != want {
-		t.Errorf("got %d want %d", got, want)
-	}
 }
