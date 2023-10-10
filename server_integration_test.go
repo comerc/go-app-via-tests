@@ -7,7 +7,10 @@ import (
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
+	file, removeFile := createTempFile(t, "")
+	defer removeFile()
+	store := NewFileSystemPlayerStore(file)
+	// store := NewInMemoryPlayerStore()
 	server := NewPlayerServer(store)
 	player := "Pepper"
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
@@ -24,7 +27,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		server.ServeHTTP(response, newLeagueRequest())
 		assertStatus(t, response.Code, http.StatusOK)
 		got := getLeagueFromResponse(t, response.Body)
-		want := []Player{{player, 3}}
+		want := League{{player, 3}}
 		assertLeague(t, got, want)
 	})
 }
