@@ -1,5 +1,5 @@
 // server.go
-package main
+package poker
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package main
+package poker
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-const dbFileName = "game.db.json"
+const DBFileName = "game.db.json"
 
 // FileSystemPlayerStore collects data about players in file.
 type FileSystemPlayerStore struct {
@@ -18,7 +18,6 @@ type FileSystemPlayerStore struct {
 	league League
 }
 
-// file_system_store.go
 func initialisePlayerDBFile(file *os.File) error {
 	file.Seek(0, 0)
 	info, err := file.Stat()
@@ -47,6 +46,21 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 		// lock:     sync.RWMutex{},
 		league: league,
 	}, nil
+}
+
+func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, func(), error) {
+	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, nil, fmt.Errorf("problem opening %s %v", path, err)
+	}
+	closeFunc := func() {
+		db.Close()
+	}
+	store, err := NewFileSystemPlayerStore(db)
+	if err != nil {
+		return nil, nil, fmt.Errorf("problem creating file system player store, %v ", err)
+	}
+	return store, closeFunc, nil
 }
 
 // RecordWin will record a player's win.
