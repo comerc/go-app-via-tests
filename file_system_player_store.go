@@ -44,8 +44,8 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 	}
 	return &FileSystemPlayerStore{
 		database: json.NewEncoder(&tape{file}),
-		lock:     sync.RWMutex{},
-		league:   league,
+		// lock:     sync.RWMutex{},
+		league: league,
 	}, nil
 }
 
