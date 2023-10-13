@@ -1,9 +1,11 @@
 package poker
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type StubPlayerStore struct {
@@ -74,4 +76,31 @@ func AssertScoreEquals(t testing.TB, got, want int) {
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
 	}
+}
+
+func AssertScheduledAlert(t testing.TB, got, want fmt.Stringer) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
+// ScheduledAlert holds information about when an alert is scheduled.
+type ScheduledAlert struct {
+	At     time.Duration
+	Amount int
+}
+
+func (s ScheduledAlert) String() string {
+	return fmt.Sprintf("%d chips at %v", s.Amount, s.At)
+}
+
+// SpyBlindAlerter allows you to spy on ScheduleAlertAt calls.
+type SpyBlindAlerter struct {
+	Alerts []ScheduledAlert
+}
+
+// ScheduleAlertAt records alerts that have been scheduled.
+func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int) {
+	s.Alerts = append(s.Alerts, ScheduledAlert{at, amount})
 }
