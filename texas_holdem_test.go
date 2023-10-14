@@ -2,6 +2,7 @@ package poker_test
 
 import (
 	"fmt"
+	"io"
 	"testing"
 	"time"
 
@@ -10,14 +11,14 @@ import (
 
 func TestGame_Start(t *testing.T) {
 	t.Run("schedules alerts on game start for 5 players", func(t *testing.T) {
-		blindAlerter := &poker.SpyBlindAlerter{}
+		blindAlerter := &SpyBlindAlerter{}
 		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
-		game.Start(5)
+		game.Start(5, io.Discard)
 		duration := 1 * time.Second
 		if poker.IsBuild {
 			duration *= 60
 		}
-		cases := []poker.ScheduledAlert{
+		cases := []ScheduledAlert{
 			{At: 0 * duration, Amount: 100},
 			{At: 10 * duration, Amount: 200},
 			{At: 20 * duration, Amount: 300},
@@ -34,14 +35,14 @@ func TestGame_Start(t *testing.T) {
 	})
 
 	t.Run("schedules alerts on game start for 7 players", func(t *testing.T) {
-		blindAlerter := &poker.SpyBlindAlerter{}
+		blindAlerter := &SpyBlindAlerter{}
 		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
-		game.Start(7)
+		game.Start(7, io.Discard)
 		duration := 1 * time.Second
 		if poker.IsBuild {
 			duration *= 60
 		}
-		cases := []poker.ScheduledAlert{
+		cases := []ScheduledAlert{
 			{At: 0 * duration, Amount: 100},
 			{At: 12 * duration, Amount: 200},
 			{At: 24 * duration, Amount: 300},
@@ -53,21 +54,21 @@ func TestGame_Start(t *testing.T) {
 }
 
 func TestGame_Finish(t *testing.T) {
-	store := &poker.StubPlayerStore{}
+	store := &StubPlayerStore{}
 	game := poker.NewTexasHoldem(dummyBlindAlerter, store)
 	winner := "Ruth"
 	game.Finish(winner)
-	poker.AssertPlayerWin(t, store, winner)
+	AssertPlayerWin(t, store, winner)
 }
 
-func checkSchedulingCases(cases []poker.ScheduledAlert, t *testing.T, blindAlerter *poker.SpyBlindAlerter) {
+func checkSchedulingCases(cases []ScheduledAlert, t *testing.T, blindAlerter *SpyBlindAlerter) {
 	for i, want := range cases {
 		t.Run(fmt.Sprint(want), func(t *testing.T) {
 			if len(blindAlerter.Alerts) <= i {
 				t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.Alerts)
 			}
 			got := blindAlerter.Alerts[i]
-			poker.AssertScheduledAlert(t, got, want)
+			AssertScheduledAlert(t, got, want)
 		})
 	}
 }

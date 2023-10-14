@@ -5,12 +5,13 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	poker "github.com/comerc/go-app-via-tests"
 )
 
-var dummyBlindAlerter = &poker.SpyBlindAlerter{}
-var dummyPlayerStore = &poker.StubPlayerStore{}
+var dummyBlindAlerter = &SpyBlindAlerter{}
+var dummyPlayerStore = &StubPlayerStore{}
 
 // var dummyStdIn = &bytes.Buffer{}
 var dummyStdOut = &bytes.Buffer{}
@@ -18,14 +19,16 @@ var dummyStdOut = &bytes.Buffer{}
 type GameSpy struct {
 	StartCalled     bool
 	StartCalledWith int
+	BlindAlert      []byte
 
 	FinishedCalled   bool
 	FinishCalledWith string
 }
 
-func (g *GameSpy) Start(numberOfPlayers int) {
+func (g *GameSpy) Start(numberOfPlayers int, to io.Writer) {
 	g.StartCalled = true
 	g.StartCalledWith = numberOfPlayers
+	to.Write(g.BlindAlert)
 }
 
 func (g *GameSpy) Finish(winner string) {
@@ -94,7 +97,10 @@ func TestCLI(t *testing.T) {
 
 func assertGameStartedWith(t testing.TB, game *GameSpy, numberOfPlayersWanted int) {
 	t.Helper()
-	if game.StartCalledWith != numberOfPlayersWanted {
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.StartCalledWith == numberOfPlayersWanted
+	})
+	if !passed {
 		t.Errorf("wanted Start called with %d but got %d", numberOfPlayersWanted, game.StartCalledWith)
 	}
 }
@@ -115,7 +121,10 @@ func assertGameNotStarted(t testing.TB, game *GameSpy) {
 
 func assertFinishCalledWith(t testing.TB, game *GameSpy, winner string) {
 	t.Helper()
-	if game.FinishCalledWith != winner {
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.FinishCalledWith == winner
+	})
+	if !passed {
 		t.Errorf("expected finish called with %q but got %q", winner, game.FinishCalledWith)
 	}
 }

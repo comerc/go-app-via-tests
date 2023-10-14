@@ -42,7 +42,7 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 		return nil, fmt.Errorf("problem loading player store from file %s, %v", file.Name(), err)
 	}
 	return &FileSystemPlayerStore{
-		database: json.NewEncoder(&tape{file}),
+		database: json.NewEncoder(&Tape{file}),
 		// lock:     sync.RWMutex{},
 		league: league,
 	}, nil

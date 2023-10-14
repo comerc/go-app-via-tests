@@ -1,17 +1,20 @@
-package poker
+package poker_test
 
 import (
 	"fmt"
+	"io"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
+
+	poker "github.com/comerc/go-app-via-tests"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []Player
+	league   []poker.Player
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -23,7 +26,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubPlayerStore) GetLeague() League {
+func (s *StubPlayerStore) GetLeague() poker.League {
 	return s.league
 }
 
@@ -51,7 +54,9 @@ func AssertNoError(t testing.TB, err error) {
 	}
 }
 
-func AssertStatus(t testing.TB, got, want int) {
+func AssertStatus(t testing.TB, response *httptest.ResponseRecorder, want int) {
+	t.Helper()
+	got := response.Code
 	if got != want {
 		t.Errorf("got status %d want %d", got, want)
 	}
@@ -64,7 +69,7 @@ func AssertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-func AssertLeague(t testing.TB, got, wantedLeague League) {
+func AssertLeague(t testing.TB, got, wantedLeague poker.League) {
 	t.Helper()
 	if !reflect.DeepEqual(got, wantedLeague) {
 		t.Errorf("got %v want %v", got, wantedLeague)
@@ -101,6 +106,6 @@ type SpyBlindAlerter struct {
 }
 
 // ScheduleAlertAt records alerts that have been scheduled.
-func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int) {
+func (s *SpyBlindAlerter) ScheduleAlertAt(at time.Duration, amount int, to io.Writer) {
 	s.Alerts = append(s.Alerts, ScheduledAlert{at, amount})
 }

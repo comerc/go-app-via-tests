@@ -1,24 +1,26 @@
-package poker
+package poker_test
 
 import (
 	"os"
 	"testing"
+
+	poker "github.com/comerc/go-app-via-tests"
 )
 
 func TestFileSystemPlayerStore(t *testing.T) {
 	t.Run("works with an empty file", func(t *testing.T) {
-		file, removeFile := createTempFile(t, "")
+		file, removeFile := mustCreateTempFile(t, "")
 		defer removeFile()
-		_, err := NewFileSystemPlayerStore(file)
+		_, err := poker.NewFileSystemPlayerStore(file)
 		AssertNoError(t, err)
 	})
-	file, removeFile := createTempFile(t, `[{"Name":"Cleo","Wins":10},{"Name":"Chris","Wins": 33}]`)
+	file, removeFile := mustCreateTempFile(t, `[{"Name":"Cleo","Wins":10},{"Name":"Chris","Wins": 33}]`)
 	defer removeFile()
-	store, err := NewFileSystemPlayerStore(file)
+	store, err := poker.NewFileSystemPlayerStore(file)
 	AssertNoError(t, err)
 	t.Run("league sorted", func(t *testing.T) {
 		got := store.GetLeague()
-		want := League{
+		want := poker.League{
 			{Name: "Chris", Wins: 33}, {Name: "Cleo", Wins: 10},
 		}
 		AssertLeague(t, got, want)
@@ -47,9 +49,9 @@ func TestFileSystemPlayerStore(t *testing.T) {
 	})
 }
 
-func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
+func mustCreateTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	t.Helper()
-	tmpfile, err := os.CreateTemp("", "temp_"+DBFileName)
+	tmpfile, err := os.CreateTemp("", "temp_"+poker.DBFileName)
 	if err != nil {
 		t.Fatalf("could not create temp file %v", err)
 	}
